@@ -98,41 +98,6 @@ void convert_cp866_to_utf8(char *source, size_t sourceLen, char *dest, size_t de
     *outPtr = '\0';
 }
 
-void trim(char *str)
-{
-    if (str == NULL || *str == '\0')
-        return;
-
-    int len = strlen(str);
-    if (len >= 3)
-    {
-        if (str[len - 3] == '/' && (unsigned char)str[len - 2] == 0xD0 && (unsigned char)str[len - 1] == 0xBA)
-        {
-            str[len - 3] = '\0';
-        }
-    }
-
-    len = strlen(str);
-    while (len > 0 && (str[len - 1] == ' ' || str[len - 1] == '\r' || str[len - 1] == '\n' || str[len - 1] == '\t' || str[len - 1] == '/'))
-    {
-        str[--len] = '\0';
-    }
-
-    int start = 0;
-    while (str[start] == ' ' || str[start] == '\t')
-        start++;
-    if (start > 0)
-    {
-        int i = 0;
-        while (str[start + i] != '\0')
-        {
-            str[i] = str[start + i];
-            i++;
-        }
-        str[i] = '\0';
-    }
-}
-
 int get_utf8_visible_width(char *str)
 {
     int width = 0;
@@ -349,10 +314,6 @@ int main()
             }
         }
         utf8Emp.date_of_birth[writeIdx] = '\0';
-
-        trim(utf8Emp.FIO);
-        trim(utf8Emp.position);
-
         utf8Emp.department = rawEmp.department;
 
         add_to_queue(mainQueue, &utf8Emp);
