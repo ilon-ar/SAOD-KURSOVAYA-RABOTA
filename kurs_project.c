@@ -237,42 +237,90 @@ void search_and_build_queue(Employee **arr, int total_count, int target_day)
         getchar();
         return;
     }
-
     Queue *resQueue = create_queue();
     int res_count = 0;
-
     int i = first_idx;
     while (i < total_count && atoi(arr[i]->date_of_birth) == target_day)
     {
         add_to_queue(resQueue, arr[i]);
-
         i++;
         res_count++;
     }
-
-    system("clear");
-    printf("=========================================================================================================\n");
-    printf("  РЕЗУЛЬТАТЫ БЫСТРОГО ПОИСКА | Сформирована очередь из %d записей (День: %02d)\n", res_count, target_day);
-    printf("=========================================================================================================\n");
-    printf("---------------------------------------------------------------------------------------------------------\n");
-
-    spis *curr = resQueue->head;
-    int idx = 1;
-    while (curr != NULL)
+    Employee **search_array = (Employee **)malloc(res_count * sizeof(Employee *));
+    spis *curr_node = resQueue->head;
+    for (int j = 0; j < res_count; j++)
     {
-        printf("| %-4d | ", idx++);
-        print_column(curr->data.employee.FIO, 35);
-        printf(" | %-10d | ", curr->data.employee.department);
-        print_column(curr->data.employee.position, 30);
-        printf(" | %-12s |\n", curr->data.employee.date_of_birth);
-        curr = curr->next;
+        search_array[j] = &(curr_node->data.employee);
+        curr_node = curr_node->next;
     }
-    printf("---------------------------------------------------------------------------------------------------------\n");
 
-    printf("Нажмите Enter для возврата к просмотру базы...");
-    while (getchar() != '\n')
-        ;
-    getchar();
+    int search_page = 1;
+    int PAGE_SIZE = 20;
+    int total_search_pages = (res_count + PAGE_SIZE - 1) / PAGE_SIZE;
+    int search_choice;
+    while (1)
+    {
+        int start_index = (search_page - 1) * PAGE_SIZE;
+        int end_index = start_index + PAGE_SIZE;
+        if (end_index > res_count)
+            end_index = res_count;
+
+        system("clear");
+        printf("=========================================================================================================\n");
+        printf("  РЕЗУЛЬТАТЫ БЫСТРОГО ПОИСКА | Страница %d из %d (Записи %d-%d из %d, День: %02d)\n",
+               search_page, total_search_pages, start_index + 1, end_index, res_count, target_day);
+        printf("=========================================================================================================\n");
+
+        printf("---------------------------------------------------------------------------------------------------------\n");
+        printf("| ");
+        print_column("№", 4);
+        printf(" | ");
+        print_column("ФИО сотрудника", 35);
+        printf(" | ");
+        print_column("Отдел", 10);
+        printf(" | ");
+        print_column("Должность", 30);
+        printf(" | ");
+        print_column("Дата рожд.", 12);
+        printf(" |\n");
+        printf("---------------------------------------------------------------------------------------------------------\n");
+
+        for (int k = start_index; k < end_index; k++)
+        {
+            printf("| %-4d | ", k + 1);
+            print_column(search_array[k]->FIO, 35);
+            printf(" | %-10d | ", search_array[k]->department);
+            print_column(search_array[k]->position, 30);
+            printf(" | %-12s |\n", search_array[k]->date_of_birth);
+        }
+        printf("---------------------------------------------------------------------------------------------------------\n");
+        printf(" 1 - Вперед | 2 - Назад | 0 - Вернуться в главное меню\n");
+        printf(" Выберите действие: ");
+
+        if (scanf("%d", &search_choice) != 1)
+        {
+            while (getchar() != '\n')
+                ;
+            break;
+        }
+
+        if (search_choice == 1)
+        {
+            if (search_page < total_search_pages)
+                search_page++;
+        }
+        else if (search_choice == 2)
+        {
+            if (search_page > 1)
+                search_page--;
+        }
+        else if (search_choice == 0)
+        {
+            break;
+        }
+    }
+
+    free(search_array);
 
     spis *p = resQueue->head;
     while (p != NULL)
@@ -321,8 +369,6 @@ int main()
     }
     fclose(file);
 
-    digital_sort(&(mainQueue->head));
-
     Employee **index_array = (Employee **)malloc(total_count * sizeof(Employee *));
     spis *curr = mainQueue->head;
     for (int i = 0; i < total_count; i++)
@@ -369,6 +415,16 @@ int main()
             {
                 while (getchar() != '\n')
                     ;
+            }
+        }
+        else if (choice == 4)
+        {
+            digital_sort(&(mainQueue->head));
+            curr = mainQueue->head;
+            for (int i = 0; i < total_count; i++)
+            {
+                index_array[i] = &(curr->data.employee);
+                curr = curr->next;
             }
         }
         else
