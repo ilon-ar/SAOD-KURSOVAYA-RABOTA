@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iconv.h>
+#include <unistd.h>
 
-const char KDI[6] = {109, 110, 0, 1, 2, 3};
+const char KDI[63] = {109, 110, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                      21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+                      42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60};
 
 #pragma pack(push, 1)
 typedef struct
@@ -165,14 +168,14 @@ void print_index_page(Employee **arr, int page, int page_size, int total_count)
     }
 
     printf("---------------------------------------------------------------------------------------------------------\n");
-    printf(" 1 - Вперед | 2 - Назад | 3 - Быстрый поиск | 0 - Выйти\n");
+    printf(" 1 - Вперед | 2 - Назад | 3 - Быстрый поиск | 4 - Отсортировать базу данных | 5 - Вывести страницу по номеру сотрудника | 0 - Выйти\n");
     printf(" Выберите действие: ");
 }
 
 int digital_sort(spis **S)
 {
     int M = 0;
-    for (int j = 5; j >= 0; j--)
+    for (int j = 64; j >= 0; j--)
     {
         Queue Q[256];
         for (int i = 0; i < 256; i++)
@@ -206,9 +209,9 @@ int digital_sort(spis **S)
     return M;
 }
 
-int bin_search_v2(Employee **arr, int n, int x)
+void bin_search_v2(Employee **arr, int x, Queue *resQueue, int L, int R, int *total_found)
 {
-    int L = 0, R = n - 1;
+    int R_mem = R;
     int m;
     while (L < R)
     {
@@ -219,33 +222,19 @@ int bin_search_v2(Employee **arr, int n, int x)
             R = m;
     }
     if (atoi(arr[L]->date_of_birth) == x)
-        return L;
-    else
-        return -1;
+    {
+        (*total_found)++;
+        add_to_queue(resQueue, arr[L]);
+        bin_search_v2(arr, x, resQueue, L + 1, R_mem, total_found);
+    }
 }
 
 void search_and_build_queue(Employee **arr, int total_count, int target_day)
 {
-    int first_idx = bin_search_v2(arr, total_count, target_day);
-
-    if (first_idx == -1)
-    {
-        printf("\nСотрудники с днем рождения %02d не найдены.\n", target_day);
-        printf("Нажмите Enter для продолжения...");
-        while (getchar() != '\n')
-            ;
-        getchar();
-        return;
-    }
-    Queue *resQueue = create_queue();
     int res_count = 0;
-    int i = first_idx;
-    while (i < total_count && atoi(arr[i]->date_of_birth) == target_day)
-    {
-        add_to_queue(resQueue, arr[i]);
-        i++;
-        res_count++;
-    }
+    Queue *resQueue = create_queue();
+    bin_search_v2(arr, target_day, resQueue, 0, total_count - 1, &res_count);
+
     Employee **search_array = (Employee **)malloc(res_count * sizeof(Employee *));
     spis *curr_node = resQueue->head;
     for (int j = 0; j < res_count; j++)
@@ -427,9 +416,43 @@ int main()
                 curr = curr->next;
             }
         }
-        else
+        else if (choice == 5)
+        {
+            int emp_num;
+            printf(" Введите номер сотрудника: ");
+            if (scanf("%d", &emp_num) == 1)
+            {
+                if (emp_num <= 0)
+                {
+                    current_page = 1;
+                }
+                else if (emp_num > total_count)
+                {
+                    current_page = total_count / PAGE_SIZE;
+                }
+                else
+                {
+                    current_page = (emp_num / PAGE_SIZE) + 1;
+                }
+            }
+            else
+            {
+                while (getchar() != '\n')
+                    ;
+            }
+        }
+        else if (choice == 0)
         {
             break;
+        }
+        else
+        {
+            printf("Введен некорректный номер действия.\nНажмите Enter для продолжения\n");
+            sleep(1);
+            int ch;
+            while ((ch = getchar()) != '\n')
+                ;
+            getchar();
         }
     }
 
